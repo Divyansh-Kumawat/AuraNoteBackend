@@ -16,10 +16,11 @@ router.post(
         body('password', 'Password must be at least 5 characters').isLength({ min: 5 }),
     ],
     async (req, res) => {
+        let success=false;
         //if there are errors, return bad request and the errors
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
+            return res.status(400).json({ success, errors: errors.array() });
         }
 
         try {
@@ -42,8 +43,8 @@ router.post(
             //instead of sending the direct user we first concatenate it with jwt token string and then send the user
             const data = { user: { id: user.id } };
             const authtoken = jwt.sign(data, JWT_SECRET);
-
-            res.json({ authtoken });
+            success=true;
+            res.json({success, authtoken });
 
         }
         //catch errors
@@ -60,6 +61,7 @@ router.post('/login', [
     body('email', 'Enter a valid email').isEmail(),
     body('password', 'Password cannot be blank').exists(),
 ], async (req, res) => {
+    let success=false;
     //if there are errors, return bad request and the errors
 
     const errors = validationResult(req);
@@ -84,13 +86,15 @@ router.post('/login', [
         console.log("Password comparison result:", passwordCompare);
 
         if (!passwordCompare) {
-            return res.status(400).json({ error: "Invalid credentials" });
+            success=false;
+            return res.status(400).json({success, error: "Invalid credentials" });
         }
 
         const data = { user: { id: user.id } };
+        success=true;
         const authtoken = jwt.sign(data, JWT_SECRET);
 
-        res.json({ authtoken });
+        res.json({ success,authtoken });
 
     } catch (error) {
         console.error(error.message);
